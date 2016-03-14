@@ -1,1 +1,1 @@
-# ctools_automodal_hooks
+# ctools_automodal patch for hooks
