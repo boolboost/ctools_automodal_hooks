@@ -1,0 +1,42 @@
+diff --git a/ctools_automodal.module b/ctools_automodal.module
+index e706bc2..479e85c 100644
+--- a/ctools_automodal.module
++++ b/ctools_automodal.module
+@@ -27,13 +27,22 @@ function ctools_automodal_menu_alter(&$items) {
+         $items["$path/%ctools_js"]['type'] = MENU_CALLBACK;
+       }
+       else {
+-        $items["$path/%ctools_js"] = $item + array('page arguments' => array());
+-        $items["$path/%ctools_js"]['page callback'] = 'ctools_automodal_get_page';
+-        array_unshift($items["$path/%ctools_js"]['page arguments'], $item['page callback']);
+-        $items["$path/%ctools_js"]['page arguments'][] = substr_count($path, '/') + 1;
+-        $items["$path/%ctools_js"]['type'] = MENU_CALLBACK;
++        $returns = module_invoke_all('ctools_automodal_items_alter', $path, $item);
++        $returns = array_filter($returns);
++
++        if ($returns) {
++          foreach ($returns as $path_ctools => $return) {
++            $items[$path_ctools] = $return;
++          }
++        } else {
++          $items["$path/%ctools_js"] = $item + array('page arguments' => array());
++          $items["$path/%ctools_js"]['page callback'] = 'ctools_automodal_get_page';
++          array_unshift($items["$path/%ctools_js"]['page arguments'], $item['page callback']);
++          $items["$path/%ctools_js"]['page arguments'][] = substr_count($path, '/') + 1;
++          $items["$path/%ctools_js"]['type'] = MENU_CALLBACK;
++        }
+       }
+-      $modal_paths[] = preg_replace('/%[^\/]*/', '*', $path);
++      $modal_paths[] = preg_replace('/%[^\/]+/', '*', $path);
+     }
+   }
+ 
+@@ -126,6 +135,8 @@ function ctools_automodal_get_form() {
+     );
+     $commands = ctools_modal_form_wrapper($form_id, $form_state);
+ 
++    drupal_alter('ctools_automodal_commands', $commands, $form_state);
++
+     if (empty($commands)) {
+       $commands[] = ctools_modal_command_loading();
+       if (!empty($_GET['destination'])) {
